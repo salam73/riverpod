@@ -1,9 +1,155 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import 'dart:async';
+import 'package:macros/macros.dart';
+
 
 part 'main.g.dart';
 
+extension on ClassDeclaration {
+  String get  notifierInterfaceName => '_\$${identifier.name}Impl';
+
+  Future<MethodDeclaration?>  buildMethod(DeclarationPhaseIntrospector builder) async  {
+    final methods = await builder.methodsOf(this);
+
+    return methods.where((e) => e.identifier.name == 'build').firstOrNull;
+  }
+}
+
+
+macro class Example
+    implements ClassDeclarationsMacro,  ClassTypesMacro {
+  const Example();
+
+  @override
+  FutureOr<void> buildDeclarationsForClass(ClassDeclaration clazz, MemberDeclarationBuilder builder) async {
+
+
+    builder.declareInType(
+     DeclarationCode.fromParts([
+        '  void method() {}',
+     ]),
+    );
+  }
+
+  @override
+  FutureOr<void> buildTypesForClass(ClassDeclaration clazz, ClassTypeBuilder builder) async {
+    builder.declareType('${clazz.identifier.name}Impl', DeclarationCode.fromString(
+      'class ${clazz.identifier.name}Impl {}',
+    ),);
+
+    builder.appendInterfaces([
+      RawTypeAnnotationCode.fromString('${clazz.identifier.name}Impl'),
+    ]);
+  }
+}
+
+/*
+macro class Riverpod
+    implements ClassDeclarationsMacro, ClassDefinitionMacro, ClassTypesMacro {
+  const Riverpod({
+    this.keepAlive = true,
+    this.cb,
+  });
+
+  final bool keepAlive;
+  final bool Function(String str)? cb;
+
+  @override
+  FutureOr<void> buildDeclarationsForClass(ClassDeclaration clazz, MemberDeclarationBuilder builder) async {
+    // if (!await _verifyValidNotifier(clazz, builder)) return;
+  
+    builder.declareInType(
+     DeclarationCode.fromParts([
+        '  ',
+        clazz.identifier.name,
+        '(Object ref) => _',
+        clazz.identifier.name,
+        '._(ref);',
+     ]),
+    );
+
+//     final build = await clazz.buildMethod(builder);
+//     build!;
+//     if (!build.hasBody) {
+//       builder.declareInType(DeclarationCode.fromString('''
+//   augment int build() {
+//     throw UnimplementedError();
+//   }
+// '''));
+//     }
+  }
+
+  // @useResult
+  // Future<bool> _verifyValidNotifier(ClassDeclaration clazz, MemberDeclarationBuilder builder) async {
+  //   if (clazz.hasAbstract) {
+  //     builder.report(
+  //       Diagnostic(
+  //         DiagnosticMessage('Annotated classes must not be abstract'),
+  //         Severity.error,
+  //       ),
+  //     );
+
+  //     return false;
+  //   }
+
+  //   if (clazz.superclass case final superclass?) {
+  //     builder.report(
+  //       Diagnostic(
+  //         DiagnosticMessage(
+  //           'Annotated classes must not specify `extends`',
+  //           target: superclass.asDiagnosticTarget,
+  //         ),
+  //         Severity.error,
+  //       ),
+  //     );
+
+  //     return false;
+  //   }
+
+  //   final build = await clazz.buildMethod(builder);
+  //   if (build == null) {
+  //     builder.report(
+  //       Diagnostic(
+  //         DiagnosticMessage(
+  //           'Annotated classes must define a `build` method',
+  //           target: clazz.asDiagnosticTarget,
+  //         ),
+  //         Severity.error,
+  //       ),
+  //     );
+  //     return false;
+  //   }
+
+  //   return true;
+  // }
+
+  @override
+  FutureOr<void> buildDefinitionForClass(ClassDeclaration clazz, TypeDefinitionBuilder builder) async {
+
+  }
+  
+  @override
+  FutureOr<void> buildTypesForClass(ClassDeclaration clazz, ClassTypeBuilder builder) async {
+    final notifier = await builder.resolveIdentifier(Uri.parse('package:counter/main.dart'), 'Notifier');
+
+    builder.declareType(clazz.notifierInterfaceName, DeclarationCode.fromString(
+      'class ${clazz.notifierInterfaceName} {}',
+    ),);
+
+    builder.appendMixins([
+      NamedTypeAnnotationCode(name: notifier),
+    ]);
+
+    builder.appendInterfaces([
+      RawTypeAnnotationCode.fromString(clazz.notifierInterfaceName),
+    ]);
+  }
+}
+*/
 // A Counter example implemented with riverpod
 
 void main() {
